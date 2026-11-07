@@ -64,7 +64,7 @@ const CONFIG={
  suppliers:{me:{name:'Mẹ Nhân (Tây Ninh)',phone:''},bt:{name:'NCC bánh tráng',phone:''}},
  methods:[['hn','Xe Huệ Nghĩa (giao tận nơi)'],['chu','Xe chú (nhận tại Phạm Văn Hai)'],['khac','Khác']],
  promo:{on:true,name:'MUA 5 TẶNG 1',from:'2026-11-03',to:'2026-11-15',n:5}, // perSku: mua 6 trả 5, mua 10 trả 8
- team:[{n:'Vân Lam',email:'jadecao26@gmail.com',pin:'1111',c:'#C8372D'},{n:'Ngọc Thảo',pin:'2222',c:'#2F7D8C'}], // c = màu riêng của mỗi người
+ team:[{n:'Vân Lam',email:'jadecao26@gmail.com',pin:'1111',c:'#C8372D'},{n:'Chị Thảo',pin:'2222',c:'#2F7D8C'}], // c = màu riêng của mỗi người
   // đổi PIN! (chỉ là khóa tạm, không phải bảo mật thật)
  outside:['Mẹ Nhân','Anh Cao Duy'], // người ngoài app, chỉ để ghi tên vào ghi chú
  channels:['Facebook','Zalo','TikTok','Người quen/Tại chỗ','Khác'],
@@ -301,7 +301,7 @@ function seed(){S=init();const V=[['muoi',0],['me',0],['rong',0],['rong',1],['bo
  M.forEach((m,i)=>{const t=Date.now()-(20-i*5)*864e5,d=ymd(new Date(t)).replace(/-/g,'').slice(2),s={id:t,code:`NH-${d}-01`,t,sup:'me',owner:C.team[i%2].n,method:m[0],foam:!!m[1],fare:m[4],pack:m[6],pick:m[5],eta:'',note:'',lines:[{p:'muoi',v:0,q:m[2],cost:12000},{p:'me',v:0,q:m[3],cost:7000}],status:'Hoàn tất'};S.sh.unshift(s);fin(s,[{ok:m[7],bad:m[9]},{ok:m[8],bad:m[10]}],1,0,'',0);s.status='Hoàn tất';s.t=t});
  for(let i=0;i<10;i++){const t=Date.now()-i*8e6-36e5,lines=[0,1].map(j=>{const x=V[(i+j*2)%6];return{p:x[0],v:x[1],q:1+(i*3+j)%7}}),c=calc(lines,0,i%3?0:15000,false),d=ymd(new Date(t)).replace(/-/g,'').slice(2);S.seq[d]=(S.seq[d]||0)+1;const paid=i%4==3?0:c.total;
   S.orders.push({id:t,code:`MN-${d}-${String(S.seq[d]).padStart(3,'0')}`,t,name:N[i%6],phone:'',ch:C.channels[i%3],recv:'Giao hàng',addr:'',note:'',lines:c.L,disc:0,dr:'',ship:i%3?0:15000,total:c.total,gv:0,pay:paid?'Tiền mặt':'COD (thu khi nhận)',paid,status:i<3?'Mới':'Hoàn tất',owner:i%2?C.team[0].n:'',chk:{}});if(paid)S.ledger.push({t,type:'thu',amt:paid,cat:'Bán hàng',src:C.sources[0],note:'demo',by:C.team[0].n})}
- S.orders.forEach(o=>o.lines.forEach(l=>{const k=K(l.p,l.vl);S.stock[k]-=l.q;l.cons=useLots(k,l.q)}));S.ledger.push({t:Date.now()-9e6,type:'chi',amt:120000,cat:'Bao bì, tem nhãn',src:C.sources[0],note:'Bịch, tem',by:C.team[0].n,adv:'Ngọc Thảo'});sv()}
+ S.orders.forEach(o=>o.lines.forEach(l=>{const k=K(l.p,l.vl);S.stock[k]-=l.q;l.cons=useLots(k,l.q)}));S.ledger.push({t:Date.now()-9e6,type:'chi',amt:120000,cat:'Bao bì, tem nhãn',src:C.sources[0],note:'Bịch, tem',by:C.team[0].n,adv:'Chị Thảo'});sv()}
 const TABS=[['sell','🛒','Bán',sell],['orders','📋','Đơn',orders],['imp','🚚','Nhập',imp],['stock','📦','Kho',stock2],['money','💰','Thu chi',money],['report','📊','Báo cáo',report]];
 function go(v){V=v;$('#nav').innerHTML=TABS.map(t=>`<button class="${t[0]==v?'on':''}" onclick="go('${t[0]}')"><b>${t[1]}</b>${t[2]}</button>`).join('');TABS.find(t=>t[0]==v)[3]();scrollTo(0,0)}
 if(!S){S=init();sv()}
