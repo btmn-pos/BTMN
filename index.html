@@ -35,6 +35,7 @@ nav button{flex:1;background:none;color:var(--mut);border-radius:0;font-size:12p
 <script>
 /* ═══ CONFIG: sửa mọi thứ ở đây ═══ */
 const CONFIG={
+ firebase:{apiKey:'AIzaSyB9P3Am0mEuGvGaJ9_VEAFRdI5zkyHKDLY',authDomain:'btmn-pos.firebaseapp.com',projectId:'btmn-pos',storageBucket:'btmn-pos.firebasestorage.app',messagingSenderId:'1051817568905',appId:'1:1051817568905:web:0e38652f97c518f41bf458'}, // xóa dòng này = quay về chế độ PIN, chỉ lưu trên máy
  shop:{name:'BÁNH TRÁNG MẸ NHÂN',slogan:'Giòn thơm từ bếp than',phone:'0941.788.170',addr:'Vinhomes Grand Park Quận 9',fb:'facebook.com/profile.php?id=61577628465558',
   thanks:'Cảm ơn bạn đã ủng hộ bánh của mẹ Nhân ❤️ Mỗi bịch bánh là một buổi sáng thức sớm của mẹ.',
   bank:{bin:'',acc:''}}, // điền mã BIN ngân hàng (vd 970436) + số tài khoản để in VietQR
@@ -51,7 +52,7 @@ const CONFIG={
  suppliers:{me:{name:'Mẹ Nhân (Tây Ninh)',phone:''},bt:{name:'NCC bánh tráng',phone:''}},
  methods:[['hn','Xe Huệ Nghĩa (giao tận nơi)'],['chu','Xe chú (nhận tại Phạm Văn Hai)'],['khac','Khác']],
  promo:{on:true,name:'MUA 5 TẶNG 1',from:'2026-11-03',to:'2026-11-15',n:5}, // perSku: mua 6 trả 5, mua 10 trả 8
- team:[{n:'Vân Lam',pin:'1111',c:'#C8372D'},{n:'Ngọc Thảo',pin:'2222',c:'#2F7D8C'}], // c = màu riêng của mỗi người
+ team:[{n:'Vân Lam',email:'jadecao26@gmail.com',pin:'1111',c:'#C8372D'},{n:'Ngọc Thảo',pin:'2222',c:'#2F7D8C'}], // c = màu riêng của mỗi người
   // đổi PIN! (chỉ là khóa tạm, không phải bảo mật thật)
  outside:['Mẹ Nhân','Anh Cao Duy'], // người ngoài app, chỉ để ghi tên vào ghi chú
  channels:['Facebook','Zalo','TikTok','Người quen/Tại chỗ','Khác'],
@@ -68,7 +69,7 @@ const SC={'Mới':'#9A8F80','Chờ hàng':'#E8782A','Đang đóng gói':'#A8532F
 function init(){let n=0;const s={orders:[],ledger:[],sh:[],stock:{},bk:{},cost:{},seq:{},log:[],lots:[],mat:defMat(),closes:[]};C.products.forEach(p=>p.v.forEach(v=>{const k=K(p.id,v[0]);s.stock[k]=0;s.cost[k]=v[2]}));s.lid=n;return s}
 let S;try{S=JSON.parse(localStorage.getItem('mn2'))}catch(e){}
 if(S&&!S.lots){S.lots=Object.entries(S.stock).filter(e=>e[1]>0).map(([k,n],i)=>({id:i+1,code:'Tồn đầu',k,qty:n,left:n,cost:S.cost[k]||0,t:Date.now(),hsd:''}));S.lid=S.lots.length}if(S){S.mat=S.mat||defMat();S.closes=S.closes||[]}let U=sessionStorage.getItem('u');
-function sv(){try{localStorage.setItem('mn2',JSON.stringify(S))}catch(e){alert('Không lưu được dữ liệu, kiểm tra bộ nhớ trình duyệt nha')}}
+function sv(){window.FB&&FB.push();try{localStorage.setItem('mn2',JSON.stringify(S))}catch(e){alert('Không lưu được dữ liệu, kiểm tra bộ nhớ trình duyệt nha')}}
 const lg=a=>{S.log.unshift([Date.now(),U||'?',a]);S.log=S.log.slice(0,300)},openM=h=>{$('#mi').innerHTML=h;$('#modal').style.display='block'},closeM=()=>$('#modal').style.display='none';
 const promoOn=()=>{const t=ymd(new Date());return C.promo.on&&t>=C.promo.from&&t<=C.promo.to},cp=t=>navigator.clipboard?.writeText(t).then(()=>alert('Đã chép nha'),()=>prompt('Chép nội dung:',t));
 function calc(lines,disc,ship,promo){let sub=0,gv=0;const L=lines.map(l=>{const v=P(l.p).v[l.v],g=promo?Math.floor(l.q/C.promo.n):0,c=S.cost[K(l.p,v[0])]||v[2];sub+=v[1]*l.q;gv+=v[1]*g;return{...l,name:P(l.p).name,vl:v[0],price:v[1],cost:c,g}});return{L,sub,gv,total:Math.max(0,sub-gv-disc+ship)}}
@@ -106,9 +107,9 @@ function charts(top,chs){const T=new Date(),n=rg==3?T.getDate():7,D=[...Array(n)
  b:R.length?line('b',R.map(s=>dmy(s.t).slice(0,5)),R.map(s=>(1-s.recv.reduce((t,r)=>t+r.ok,0)/sent(s))*100),pct,R.map(s=>' · '+mn(s.method).split(' (')[0]+(s.foam?' + xốp':'')+' · gửi '+sent(s))):E,
  m:G.length?bars('m',G.map(g=>(g.m=='hn'?'Huệ Nghĩa':g.m=='chu'?'Xe chú':'Khác')+(g.f?'+xốp':'')),[{n:'Vỡ',c:'#E8782A',v:G.map(g=>(1-g.ok/g.sent)*100),f:pct}]):E}}
 /* ═══ ĐĂNG NHẬP ═══ */
-function logout(){sessionStorage.removeItem('u');U=null;login()}
-function login(){setWho();openM(`<h3>Vào làm nha 🔥</h3><div class="g"><select id="lu">${C.team.map(t=>`<option>${t.n}</option>`).join('')}</select><input id="lp" type="password" inputmode="numeric" placeholder="Mã PIN"><button onclick="doLogin()">Vào</button></div>`)}
-function doLogin(){const t=C.team.find(x=>x.n==$('#lu').value);if(t&&t.pin==$('#lp').value){U=t.n;sessionStorage.setItem('u',U);closeM();setWho();go('sell')}else alert('PIN chưa đúng nha')}
+function logout(){if(C.firebase){if(!U)login();else if(confirm('Đăng xuất '+U+'?'))FB.logout();return}sessionStorage.removeItem('u');U=null;login()}
+function login(){setWho();if(C.firebase)return openM(`<h3>Đăng nhập 🔥</h3><div class="g"><input id="le" type="email" autocomplete="username" placeholder="Email"><input id="lp" type="password" autocomplete="current-password" placeholder="Mật khẩu"><button onclick="doLogin()">Vào</button></div>`);openM(`<h3>Vào làm nha 🔥</h3><div class="g"><select id="lu">${C.team.map(t=>`<option>${t.n}</option>`).join('')}</select><input id="lp" type="password" inputmode="numeric" placeholder="Mã PIN"><button onclick="doLogin()">Vào</button></div>`)}
+function doLogin(){if(C.firebase){if(!window.FB)return alert('Đang tải, thử lại sau vài giây nha');FB.login($('#le').value.trim(),$('#lp').value).catch(()=>alert('Email hoặc mật khẩu chưa đúng nha'));return}const t=C.team.find(x=>x.n==$('#lu').value);if(t&&t.pin==$('#lp').value){U=t.n;sessionStorage.setItem('u',U);closeM();setWho();go('sell')}else alert('PIN chưa đúng nha')}
 /* ═══ BÁN HÀNG ═══ */
 let cart=[],F={ch:C.channels[0],recv:'Lấy tại chỗ',pay:'Tiền mặt',disc:0,ship:0,paid:0},busy=0,V='sell';
 const addC=(p,v)=>{const l=cart.find(x=>x.p==p&&x.v==v);l?l.q++:cart.push({p,v,q:1});rc()},pimg=p=>`<div class="im"><img src="${p.img}" data-i="${p.id}" alt="" onerror="if(IMG[this.dataset.i]&&this.src.slice(0,4)!='data'){this.src=IMG[this.dataset.i]}else{this.parentNode.textContent='${p.emoji}'}"></div>`;
@@ -197,8 +198,8 @@ function report(){const now=new Date(),st=rg==3?new Date(now.getFullYear(),now.g
 <div class="kpi">${[['Doanh thu',rev],['Đã thu',thu],['Chi phí khác',chi],['LÃI THẬT TẠM TÍNH',rev-cogs-chi],['Số đơn',O.length],['Đơn trung bình',O.length?rev/O.length:0],['Số bịch bán',bich],['Công nợ khách',debt],['Nợ phải trả NCC',pay]].map(([a,b],i)=>`<div><span class="lab">${a}</span><b style="${i==3?'color:var(--red)':''}">${i==4||i==6?b:vnd(b)}</b></div>`).join('')}</div>
 <div class="card" style="margin-top:12px"><h3>Sức khỏe nhập hàng</h3><div class="ln"><span class="sp">Tỉ lệ vỡ (7 chuyến gần nhất)</span><b>${sent?((1-okn/sent)*100).toFixed(1):'–'}%</b></div><div class="ln"><span class="sp">Logistics mỗi bịch nguyên vẹn</span><b>${vnd(lpo)}</b></div><div class="ln"><span class="sp">Chuyến đang trên đường</span><b>${en2}</b></div><div class="ln"><span class="sp">Giá trị hàng vỡ tháng này</span><b>${vnd(lost)}</b></div></div>
 <div class="card"><h3>Thu & chi theo ngày</h3>${CH.d}</div><div class="card"><h3>Tỉ trọng sản phẩm</h3>${CH.p}</div><div class="card"><h3>Doanh thu theo kênh</h3>${CH.c}</div><div class="card"><h3>Tỉ lệ vỡ theo chuyến</h3>${CH.b}</div><div class="card"><h3>Tỉ lệ vỡ theo phương án</h3>${CH.m}</div><div class="card">Hàng tặng khuyến mãi: <b>${vnd(gift)}</b></div>
-<div class="r" style="margin-bottom:8px">${[["o","Đơn"],["l","Thu chi"],["k","Tồn kho"],["s","Chuyến nhập"]].map(x=>`<button class="o s" onclick="exCsv('${x[0]}')">CSV ${x[1]}</button>`).join("")}</div><div class="r"><button class="sp" onclick="cp(window._eod)">Chép báo cáo cuối ngày</button><button class="o sp" onclick="exp()">Xuất JSON</button></div><div class="r" style="margin-top:8px"><button class="o sp" onclick="impJ()">Nhập JSON</button><button class="o sp" onclick="if(confirm('Xóa TOÀN BỘ dữ liệu (đơn hàng, thu chi, kho) để bắt đầu từ đầu? Nên bấm Xuất JSON để sao lưu trước.')){localStorage.removeItem('mn2');location.reload()}">Xóa toàn bộ dữ liệu</button></div>
-<p class="lab">⚠ App chứa tên/SĐT/địa chỉ khách. PIN trong code chỉ là khóa tạm; dùng thật nên bật Firebase + đăng nhập, đừng để dữ liệu thật trên bản demo công khai.</p>`}
+<div class="r" style="margin-bottom:8px">${[["o","Đơn"],["l","Thu chi"],["k","Tồn kho"],["s","Chuyến nhập"]].map(x=>`<button class="o s" onclick="exCsv('${x[0]}')">CSV ${x[1]}</button>`).join("")}</div><div class="r"><button class="sp" onclick="cp(window._eod)">Chép báo cáo cuối ngày</button><button class="o sp" onclick="exp()">Xuất JSON</button></div><div class="r" style="margin-top:8px"><button class="o sp" onclick="impJ()">Nhập JSON</button><button class="o sp" onclick="if(confirm('Xóa TOÀN BỘ dữ liệu (đơn hàng, thu chi, kho) để bắt đầu từ đầu? Nên bấm Xuất JSON để sao lưu trước.')){if(C.firebase&&window.FB)FB.reset();else{localStorage.removeItem('mn2');location.reload()}}">Xóa toàn bộ dữ liệu</button></div>
+<p class="lab">⚠ App chứa tên/SĐT/địa chỉ khách. ${C.firebase?'Dữ liệu lưu trên Firebase, chỉ tài khoản được cấp quyền mới xem được.':'PIN trong code chỉ là khóa tạm; dùng thật nên bật Firebase + đăng nhập.'}</p>`}
 function exp(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='me-nhan-'+ymd(new Date())+'.json';a.click()}
 function impJ(){const i=document.createElement('input');i.type='file';i.onchange=()=>i.files[0].text().then(t=>{try{S=JSON.parse(t);sv();location.reload()}catch(e){alert('File không đúng định dạng')}});i.click()}
 /* ═══ DỮ LIỆU MẪU ═══ */
@@ -210,5 +211,87 @@ function seed(){S=init();const V=[['muoi',0],['me',0],['rong',0],['rong',1],['bo
 const TABS=[['sell','🛒','Bán',sell],['orders','📋','Đơn',orders],['imp','🚚','Nhập',imp],['stock','📦','Kho',stock2],['money','💰','Thu chi',money],['report','📊','Báo cáo',report]];
 function go(v){V=v;$('#nav').innerHTML=TABS.map(t=>`<button class="${t[0]==v?'on':''}" onclick="go('${t[0]}')"><b>${t[1]}</b>${t[2]}</button>`).join('');TABS.find(t=>t[0]==v)[3]();scrollTo(0,0)}
 if(!S){S=init();sv()}
-if(U){setWho();go('sell')}else{go('sell');login()}
-</script></body></html>
+if(C.firebase){U=null;setWho();go('sell')}else if(U){setWho();go('sell')}else{go('sell');login()}
+</script>
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+import{getFirestore,doc,onSnapshot,runTransaction,setDoc,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+if(C.firebase){
+/* ═══ FIREBASE: đăng nhập + đồng bộ dữ liệu giữa các máy ═══ */
+const J=x=>JSON.stringify(x),CL=x=>x===undefined?x:JSON.parse(J(x)),isO=x=>x&&typeof x=='object'&&!Array.isArray(x);
+/* Gộp thay đổi: R = bản trên mạng, B = bản gốc lần đồng bộ trước, L = bản trên máy này */
+function mergeArr(R,B,L){
+  const byId=a=>a.length&&a.every(x=>isO(x)&&x.id!=null);
+  if(byId(B.concat(L))&&R.every(x=>isO(x)&&x.id!=null)){
+    const bm=new Map(B.map(x=>[x.id,J(x)])),lm=new Map(L.map(x=>[x.id,x]));
+    let out=R.filter(x=>!(bm.has(x.id)&&!lm.has(x.id)));            // xoá những cái máy này đã xoá
+    out=out.map(x=>{const l=lm.get(x.id);return l&&bm.get(x.id)!==J(l)?l:x}); // sửa
+    const rid=new Set(out.map(x=>x.id)),add=L.filter(x=>!bm.has(x.id)&&!rid.has(x.id));
+    return place(out,L,add);
+  }
+  const cnt=new Map();B.forEach(x=>{const k=J(x);cnt.set(k,(cnt.get(k)||0)+1)});
+  const lc=new Map();L.forEach(x=>{const k=J(x);lc.set(k,(lc.get(k)||0)+1)});
+  const rem=new Map(),add=[];
+  cnt.forEach((n,k)=>{const d=n-(lc.get(k)||0);if(d>0)rem.set(k,d)});
+  const seen=new Map();L.forEach(x=>{const k=J(x),s=(seen.get(k)||0)+1;seen.set(k,s);if(s>(cnt.get(k)||0))add.push(x)});
+  const out=R.filter(x=>{const k=J(x),n=rem.get(k);if(n){rem.set(k,n-1);return false}return true});
+  return place(out,L,add);
+}
+function place(out,L,add){ // mục mới ở đầu danh sách thì chèn đầu, còn lại thêm cuối
+  if(!add.length)return out;const as=new Set(add),front=[];
+  for(const x of L){if(as.has(x)){front.push(x);as.delete(x)}else break}
+  return front.concat(out,add.filter(x=>as.has(x)));
+}
+function merge(R,B,L){
+  if(J(L)===J(B))return CL(R);
+  if(R===undefined||B===undefined)return CL(L);
+  if(Array.isArray(L)&&Array.isArray(B)&&Array.isArray(R))return mergeArr(R,B,L);
+  if(isO(L)&&isO(B)&&isO(R)){const o={};
+    new Set([...Object.keys(R),...Object.keys(L)]).forEach(k=>{
+      if(!(k in L)){if(!(k in B))o[k]=CL(R[k]);return}   // máy này xoá key thì bỏ
+      if(!(k in R)){if(!(k in B))o[k]=CL(L[k]);else if(J(L[k])!==J(B[k]))o[k]=CL(L[k]);return}
+      o[k]=k in B?merge(R[k],B[k],L[k]):CL(L[k]);});
+    return o}
+  if(typeof L=='number'&&typeof B=='number'&&typeof R=='number')return R+(L-B); // cộng dồn (kho, số thứ tự…)
+  return CL(L);
+}
+const app=initializeApp(C.firebase),auth=getAuth(app),db=getFirestore(app),ref=doc(db,'btmn','state'),BK='mn2_base';
+let base=null,me=null,unsub=null,busy=false,again=false,tm=null;try{base=JSON.parse(localStorage.getItem(BK))}catch(e){}
+const saveL=()=>{try{localStorage.setItem('mn2',J(S));localStorage.setItem(BK,J(base))}catch(e){}};
+const dirty=()=>!base||J(S)!==J(base),looksDemo=s=>(s.ledger||[]).some(l=>l.note=='demo');
+function st(t,c){let e=document.getElementById('fbs');if(!e){e=document.createElement('div');e.id='fbs';e.style.cssText='position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:20;font-size:12px;padding:4px 12px;border-radius:99px;background:#fff;box-shadow:0 1px 6px #0003;cursor:pointer';e.onclick=()=>draw(1);document.body.appendChild(e)}e.textContent=t||'';e.style.color=c||'#4E9F6B';e.style.display=t?'block':'none'}
+function draw(force){const ui=$('#modal').style.display=='block'||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(ui&&!force){st('Có dữ liệu mới · chạm để cập nhật','#E8782A');return}const y=scrollY;TABS.find(t=>t[0]==V)[3]();scrollTo(0,y);st('')}
+async function push(){
+  if(!me)return;if(busy){again=true;return}if(base&&!dirty())return;busy=true;
+  try{const Ls=CL(S),B0=CL(base);let M;
+    await runTransaction(db,async tx=>{const d=await tx.get(ref),R=d.exists()?JSON.parse(d.data().j):undefined;
+      M=R===undefined?(looksDemo(Ls)?init():Ls):(B0?merge(R,B0,Ls):R);
+      const j=J(M);if(j.length>900000)throw new Error('big');tx.set(ref,{j,by:me,at:serverTimestamp()})});
+    const before=J(S);S=before===J(Ls)?CL(M):merge(M,Ls,S);base=M;saveL();if(J(S)!==before)draw();st('');
+  }catch(e){if(e.message=='big')alert('Dữ liệu sắp đầy giới hạn 1MB của Firebase. Hãy Xuất JSON lưu lại và nhờ chỉnh code để lưu trữ đơn cũ.');
+    st('Chưa đồng bộ được · sẽ tự thử lại','#C8372D');clearTimeout(tm);tm=setTimeout(push,15000)}
+  busy=false;if(again){again=false;push()}
+}
+function listen(){unsub=onSnapshot(ref,d=>{
+  if(!d.exists()){push();return}if(d.metadata.hasPendingWrites)return;
+  const R=JSON.parse(d.data().j);if(base&&J(R)===J(base))return;
+  const before=J(S);S=base&&dirty()?merge(R,base,S):R;base=R;saveL();if(J(S)!==before)draw();if(dirty())push();else st('');
+},()=>st('Mất kết nối dữ liệu · kiểm tra mạng','#C8372D'))}
+window.addEventListener('online',()=>push());
+window.FB={
+  push(){clearTimeout(tm);tm=setTimeout(push,400)},
+  login:(e,p)=>signInWithEmailAndPassword(auth,e,p),
+  async logout(){if(dirty()&&!confirm('Còn thay đổi chưa đồng bộ lên mạng. Vẫn đăng xuất (sẽ mất thay đổi đó)?'))return;
+    unsub&&unsub();unsub=null;await signOut(auth);localStorage.removeItem('mn2');localStorage.removeItem(BK);base=null;S=init();draw(1)},
+  async reset(){S=init();await setDoc(ref,{j:J(S),by:me,at:serverTimestamp()});base=CL(S);saveL();draw(1);alert('Đã xóa toàn bộ dữ liệu')}
+};
+onAuthStateChanged(auth,u=>{
+  if(!u){me=U=null;setWho();login();return}
+  const t=C.team.find(x=>(x.email||'').toLowerCase()==(u.email||'').toLowerCase());
+  if(!t){alert('Tài khoản '+u.email+' chưa được cấp quyền dùng app');signOut(auth);return}
+  me=U=t.n;setWho();closeM();draw(1);if(!unsub)listen();
+});
+}
+</script>
+</body></html>
